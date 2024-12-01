@@ -1,31 +1,57 @@
-// Library Array
-const myLibrary = [
-    new Book("The Hobbit", "J.R.R. Tolkien", 295, false),
-    new Book("1984", "George Orwell", 328, true),
-    new Book("To Kill a Mockingbird", "Harper Lee", 281, true),
-    new Book("The Great Gatsby", "F. Scott Fitzgerald", 180, false)
-];
-
 // Book Constructor & Prototype
-function Book(title, author, pages, hasRead) {
-    this.title = title;
-    this.author = author;
-    this.pages = pages;
-    this.hasRead = hasRead;
+class Book {
+    constructor(title, author, pages, hasRead) {
+        this.title = title;
+        this.author = author;
+        this.pages = pages;
+        this.hasRead = hasRead;
+        this.id = null;
+    }
+
+    info() {
+        const hasReadString = this.hasRead ? "has read" : "not read yet";
+        return `${this.title} by ${this.author}, ${this.pages} pages, ${hasReadString}`;
+    };
+
+    toggleReadStatus() {
+        this.hasRead = !this.hasRead;
+    };
 }
 
-Book.prototype.info = function() {
-    const hasReadString = this.hasRead ? "has read" : "not read yet";
-    return `${this.title} by ${this.author}, ${this.pages} pages, ${hasReadString}`;
+class Library {
+    constructor() {
+        this.books = [];
+        this.nextId = 1;
+    }
+
+    addBook(book) {
+        book.id = this.nextId++;
+        this.books.push(book);
+    }
+
+    removeBook(bookId) {
+        this.books = this.books.filter(book => book.id !== Number(bookId));
+    }
+
+    getBooks() {
+        return this.books;
+    }
+
+    findBook(bookId) {
+        return this.books.find(book => book.id === Number(bookId));
+    }
 }
 
-Book.prototype.toggleReadStatus = function() {
-    this.hasRead = !this.hasRead;
-}
+// Instantiate Library
+const myLibrary = new Library();
 
-function addBook(title, author, pages, hasRead) {
-    myLibrary.push(new Book(title, author, pages, hasRead));
-}
+
+
+// Prepopulate Library
+myLibrary.addBook(new Book("The Hobbit", "J.R.R. Tolkien", 295, false));
+myLibrary.addBook(new Book("1984", "George Orwell", 328, true));
+myLibrary.addBook(new Book("To Kill a Mockingbird", "Harper Lee", 281, true));
+myLibrary.addBook(new Book("The Great Gatsby", "F. Scott Fitzgerald", 180, false));
 
 // Display Books
 function displayBooks(bookList) {
@@ -33,10 +59,10 @@ function displayBooks(bookList) {
 
     libraryContainer.innerHTML = '';
 
-    bookList.forEach((book, index) => {
+    bookList.forEach((book) => {
         const bookDiv = document.createElement('li');
         bookDiv.classList.add('book');
-        bookDiv.setAttribute('data-index', index);
+        bookDiv.setAttribute('data-id', book.id);
 
         bookDiv.innerHTML = `
             ${book.info()} 
@@ -49,21 +75,22 @@ function displayBooks(bookList) {
 
 
 // Remove Book & Toggle Read Buttons
-const removeBookBtn = document.getElementById("remove-book-btn");
 const libraryContainer = document.getElementById('library-container');
 libraryContainer.addEventListener('click', (event) => {
-    const bookIndex = event.target.parentElement.getAttribute('data-index');
-    const targetBook = myLibrary[bookIndex];
+    const bookId = event.target.parentElement.getAttribute('data-id');
 
     if (event.target.classList.contains('toggle-read-btn')) {
-        targetBook.toggleReadStatus();
+        const targetBook = myLibrary.findBook(bookId);
+        if (targetBook) {
+            targetBook.toggleReadStatus();
+        }
     }
 
     if (event.target.classList.contains('remove-book-btn')) {
-        myLibrary.splice(bookIndex, 1);
+        myLibrary.removeBook(bookId);
     }
 
-    displayBooks(myLibrary);
+    displayBooks(myLibrary.getBooks());
 })
 
 // Form Actions
@@ -94,7 +121,7 @@ newBookSubmit.addEventListener("click", (event) => {
     const pages = formInputs.pages.value;
     const hasRead = formInputs.hasRead.value;
 
-    addBook(title, author, pages, hasRead);
+    myLibrary.addBook(title, author, pages, hasRead);
 
     bookDialog.close();
 
@@ -103,7 +130,7 @@ newBookSubmit.addEventListener("click", (event) => {
     formInputs.pages.value = '';
     formInputs.hasRead.value = false;
 
-    displayBooks(myLibrary);
+    displayBooks(myLibrary.getBooks());
 })
 
-displayBooks(myLibrary);
+displayBooks(myLibrary.getBooks());
